@@ -8,11 +8,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from PIL import Image, ImageDraw
-from PyQt6.QtCore import QPoint, QRect, Qt
-from PyQt6.QtGui import QColor, QPainter, QPen, QPixmap
+from PyQt6.QtCore import QPoint, QRect, QSize, Qt
+from PyQt6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QColorDialog, QFileDialog, QFormLayout, QGroupBox,
-    QHBoxLayout, QListWidget, QListWidgetItem, QMessageBox,
+    QFrame, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox,
     QLineEdit, QProgressBar, QPushButton, QSpinBox, QSplitter, QVBoxLayout,
     QWidget,
 )
@@ -25,7 +25,7 @@ INKSCAPE_EXPORT_EXTENSIONS = {".emf", ".eps", ".pdf"}
 
 def editar_imagen_vectorial(
     ruta_entrada: str,
-    ruta_inkscape: str,
+    ruta_inkscape: str | None,
     x: float,
     y: float,
     ancho: float,
@@ -42,7 +42,7 @@ def editar_imagen_vectorial(
     temporalmente antes de editarse y se vuelven a exportar con Inkscape.
     """
     entrada = Path(ruta_entrada)
-    inkscape = Path(ruta_inkscape)
+    inkscape = Path(ruta_inkscape) if ruta_inkscape else None
     if not entrada.exists():
         raise FileNotFoundError(f"No existe la imagen de entrada: {entrada}")
     if ancho <= 0 or alto <= 0 or grosor_borde < 0:
@@ -55,7 +55,7 @@ def editar_imagen_vectorial(
     necesita_inkscape = (
         extension_entrada != ".svg" or extension_salida != ".svg"
     )
-    if necesita_inkscape and (not ruta_inkscape or not inkscape.is_file()):
+    if necesita_inkscape and (inkscape is None or not inkscape.is_file()):
         raise FileNotFoundError(
             "Se necesita una ruta válida al ejecutable de Inkscape para "
             f"procesar {entrada.suffix}."
@@ -281,6 +281,11 @@ class ImageEditor(QWidget):
         self.image_files, self.output_folder = [], ""
         self.inkscape_path = shutil.which("inkscape") or ""
         self.rect_color = QColor("white")
+        graphics = Path(__file__).resolve().parent / "graphics"
+        self.logo_process = QIcon(str(graphics / "logo_cajero_1.ico"))
+        self.logo_done = QIcon(str(graphics / "logo_cajero_2.ico"))
+        self.logo_app = QIcon(str(graphics / "logo_cajero_3.ico"))
+        self.setWindowIcon(self.logo_app)
         self.setWindowTitle("Editor de Imágenes")
         self.resize(1400, 850)
         self.build_ui()
@@ -332,14 +337,40 @@ class ImageEditor(QWidget):
         right_layout.addLayout(inkscape_layout)
         self.preview = ImagePreviewWidget()
         right_layout.addWidget(self.preview)
+        process_layout = QHBoxLayout()
+        logo_frame = QFrame()
+        logo_frame.setObjectName("processLogoFrame")
+        logo_frame.setFrameShape(QFrame.Shape.StyledPanel)
+        logo_frame.setStyleSheet(
+            "#processLogoFrame { border: 1px solid #aaa; border-radius: 6px; "
+            "background: #f5f5f5; }"
+        )
+        logo_frame.setMinimumSize(140, 140)
+        logo_frame.setMaximumWidth(180)
+        logo_layout = QVBoxLayout(logo_frame)
+        self.logo_display = QLabel()
+        self.logo_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo_layout.addWidget(self.logo_display)
+        process_layout.addWidget(logo_frame)
+
+        process_controls = QVBoxLayout()
         self.progress = QProgressBar()
-        right_layout.addWidget(self.progress)
+        process_controls.addWidget(self.progress)
         self.btn_process = QPushButton("Procesar imágenes")
         self.btn_process.clicked.connect(self.process_images)
-        right_layout.addWidget(self.btn_process)
+        process_controls.addWidget(self.btn_process)
+        self.btn_reset = QPushButton("Vaciar lista y restablecer")
+        self.btn_reset.clicked.connect(self.reset)
+        process_controls.addWidget(self.btn_reset)
+        process_layout.addLayout(process_controls, 1)
+        right_layout.addLayout(process_layout)
+        self._set_process_logo(self.logo_process)
         splitter.addWidget(right)
         splitter.setSizes([350, 1000])
         root.addWidget(splitter)
+
+    def _set_process_logo(self, logo):
+        self.logo_display.setPixmap(logo.pixmap(QSize(112, 112)))
 
     def select_images(self):
         files, _ = QFileDialog.getOpenFileNames(
@@ -368,6 +399,21 @@ class ImageEditor(QWidget):
         )
         if ruta:
             self.txt_inkscape.setText(ruta)
+
+    def reset(self):
+        self.image_files.clear()
+        self.list_images.clear()
+        self.preview.set_image(None)
+        self.output_folder = ""
+        self.txt_output.clear()
+        self.txt_inkscape.setText(self.inkscape_path)
+        self.spin_width.setValue(250)
+        self.spin_height.setValue(100)
+        self.rect_color = QColor("white")
+        self.preview.set_rect_color(self.rect_color)
+        self.btn_color.setStyleSheet("")
+        self.progress.setValue(0)
+        self._set_process_logo(self.logo_process)
 
     def choose_color(self):
         color = QColorDialog.getColor(self.rect_color, self)
@@ -452,6 +498,7 @@ class ImageEditor(QWidget):
                 return
         total = len(self.image_files)
         self.progress.setValue(0)
+        self._set_process_logo(self.logo_process)
         for idx, image_path in enumerate(self.image_files):
             entrada = Path(image_path)
             salida = output_paths[idx]
@@ -467,7 +514,9 @@ class ImageEditor(QWidget):
                     else:
                         x_v, y_v, w_v, h_v = x, y, w, h
                     salida = Path(editar_imagen_vectorial(
-                        str(entrada), str(ruta_inkscape), x_v, y_v, w_v, h_v,
+                        str(entrada),
+                        str(ruta_inkscape) if ruta_inkscape else None,
+                        x_v, y_v, w_v, h_v,
                         color_borde="none", grosor_borde=0,
                         color_relleno=self.rect_color.name(), ruta_salida=str(salida),
                     ))
@@ -493,10 +542,13 @@ class ImageEditor(QWidget):
             self.progress.setValue(int((idx + 1) * 100 / total))
         QMessageBox.information(self, "Finalizado",
                                  "Imágenes generadas correctamente.")
+        self._set_process_logo(self.logo_done)
 
 
 def main():
     app = QApplication(sys.argv)
+    graphics = Path(__file__).resolve().parent / "graphics"
+    app.setWindowIcon(QIcon(str(graphics / "logo_cajero_3.ico")))
     window = ImageEditor()
     window.show()
     sys.exit(app.exec())

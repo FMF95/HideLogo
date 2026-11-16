@@ -17,6 +17,10 @@ procesar los archivos.
   imagen resultante.
 - Confirmación única antes de sobrescribir archivos existentes.
 - Barra de progreso y mensajes de error antes de iniciar operaciones inválidas.
+- Panel de estado con un icono que cambia al finalizar correctamente.
+- Botón para vaciar la lista y restaurar la configuración inicial.
+- Icono de aplicación configurable mediante los archivos incluidos en
+  `graphics/`.
 
 ## Requisitos
 
@@ -51,6 +55,18 @@ Los archivos de salida conservan el nombre original. Si ya existe alguno, la
 aplicación pregunta una sola vez si se deben sobrescribir. Los archivos WMF,
 que no se exportan directamente en todas las instalaciones de Inkscape, se
 generan como SVG.
+
+El botón **Vaciar lista y restablecer** elimina las imágenes cargadas, limpia la
+carpeta de salida, restaura el tamaño y el color iniciales y devuelve el icono
+del botón de proceso a `logo_cajero_1.ico`.
+
+## Iconos
+
+Los iconos deben permanecer en la carpeta `graphics/` junto a estos nombres:
+
+- `logo_cajero_1.ico`: icono inicial del panel de procesamiento.
+- `logo_cajero_2.ico`: icono mostrado tras completar correctamente el proceso.
+- `logo_cajero_3.ico`: icono de la ventana y de la aplicación.
 
 ## Función vectorial
 
