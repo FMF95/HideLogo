@@ -23,6 +23,12 @@ VECTOR_EXTENSIONS = {".emf", ".wmf", ".svg", ".eps", ".pdf"}
 INKSCAPE_EXPORT_EXTENSIONS = {".emf", ".eps", ".pdf"}
 
 
+def _ruta_recurso(nombre: str) -> Path:
+    """Devuelve la ruta de un recurso en ejecución normal o empaquetada."""
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return base / "graphics" / nombre
+
+
 def editar_imagen_vectorial(
     ruta_entrada: str,
     ruta_inkscape: str | None,
@@ -281,10 +287,9 @@ class ImageEditor(QWidget):
         self.image_files, self.output_folder = [], ""
         self.inkscape_path = shutil.which("inkscape") or ""
         self.rect_color = QColor("white")
-        graphics = Path(__file__).resolve().parent / "graphics"
-        self.logo_process = QIcon(str(graphics / "logo_cajero_1.ico"))
-        self.logo_done = QIcon(str(graphics / "logo_cajero_2.ico"))
-        self.logo_app = QIcon(str(graphics / "logo_cajero_3.ico"))
+        self.logo_process = QIcon(str(_ruta_recurso("logo_cajero_1.ico")))
+        self.logo_done = QIcon(str(_ruta_recurso("logo_cajero_2.ico")))
+        self.logo_app = QIcon(str(_ruta_recurso("logo_cajero_3.ico")))
         self.setWindowIcon(self.logo_app)
         self.setWindowTitle("Editor de Imágenes")
         self.resize(1400, 850)
@@ -547,8 +552,7 @@ class ImageEditor(QWidget):
 
 def main():
     app = QApplication(sys.argv)
-    graphics = Path(__file__).resolve().parent / "graphics"
-    app.setWindowIcon(QIcon(str(graphics / "logo_cajero_3.ico")))
+    app.setWindowIcon(QIcon(str(_ruta_recurso("logo_cajero_3.ico"))))
     window = ImageEditor()
     window.show()
     sys.exit(app.exec())

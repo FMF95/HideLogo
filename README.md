@@ -27,6 +27,7 @@ procesar los archivos.
 - Python 3.10 o posterior.
 - PyQt6.
 - Pillow.
+- PyInstaller, solo para generar el ejecutable.
 - Inkscape, solo necesario para formatos vectoriales distintos de SVG o para
   exportar a un formato diferente de SVG.
 
@@ -91,3 +92,42 @@ Las coordenadas se expresan en las unidades del `viewBox` del SVG. La función
 convierte temporalmente los formatos que no sean SVG, inserta un elemento
 `rect` al final del documento y elimina los archivos temporales al terminar.
 Para un SVG guardado como SVG no es necesario disponer de Inkscape.
+
+## Crear un ejecutable Windows
+
+El proyecto incluye [HideLogo.spec](D:/Programación/HideLogo/HideLogo.spec).
+Este archivo configura:
+
+- Un único ejecutable (`onefile`).
+- Aplicación gráfica sin ventana de terminal (`console=False`).
+- `logo_cajero_3.ico` como icono del archivo `.exe`.
+- Inclusión embebida de la carpeta `graphics/`; no es necesario distribuirla
+  junto al ejecutable.
+
+Desde PowerShell, situado en la carpeta del proyecto, ejecuta:
+
+```powershell
+python -m pip install pyinstaller
+python -m PyInstaller --clean --noconfirm HideLogo.spec
+```
+
+El ejecutable se generará en:
+
+```text
+dist\HideLogo.exe
+```
+
+Para distribuir la aplicación basta con copiar `dist\HideLogo.exe`. La carpeta
+`graphics/` y el código fuente no son necesarios en el equipo de destino.
+Inkscape sí debe estar instalado en el equipo si se van a editar formatos
+vectoriales distintos de SVG; la ruta a `inkscape.exe` se selecciona desde la
+aplicación.
+
+Si se modifican los iconos o el código, vuelve a ejecutar el comando de
+compilación. Las carpetas `build/` y `dist/` son artefactos generados por
+PyInstaller y pueden eliminarse antes de una compilación limpia.
+
+Comando de compilación:
+```text
+python -m PyInstaller --clean --noconfirm HideLogo.spec
+```
