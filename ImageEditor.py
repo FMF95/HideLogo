@@ -364,9 +364,12 @@ class ImageEditor(QWidget):
         self.btn_process = QPushButton("Procesar imágenes")
         self.btn_process.clicked.connect(self.process_images)
         process_controls.addWidget(self.btn_process)
-        self.btn_reset = QPushButton("Vaciar lista y restablecer")
-        self.btn_reset.clicked.connect(self.reset)
-        process_controls.addWidget(self.btn_reset)
+        self.btn_reset_design = QPushButton("Restablecer diseño")
+        self.btn_reset_design.clicked.connect(self.reset_design)
+        process_controls.addWidget(self.btn_reset_design)
+        self.btn_clear_images = QPushButton("Vaciar lista")
+        self.btn_clear_images.clicked.connect(self.clear_image_list)
+        process_controls.addWidget(self.btn_clear_images)
         process_layout.addLayout(process_controls, 1)
         right_layout.addLayout(process_layout)
         self._set_process_logo(self.logo_process)
@@ -405,19 +408,23 @@ class ImageEditor(QWidget):
         if ruta:
             self.txt_inkscape.setText(ruta)
 
-    def reset(self):
-        self.image_files.clear()
-        self.list_images.clear()
-        self.preview.set_image(None)
-        self.output_folder = ""
-        self.txt_output.clear()
-        self.txt_inkscape.setText(self.inkscape_path)
+    def reset_design(self):
+        current_pixmap = self.preview.pixmap
         self.spin_width.setValue(250)
         self.spin_height.setValue(100)
         self.rect_color = QColor("white")
         self.preview.set_rect_color(self.rect_color)
         self.btn_color.setStyleSheet("")
-        self.progress.setValue(0)
+        if current_pixmap is not None:
+            self.preview.img_rect_w = self.spin_width.value()
+            self.preview.img_rect_h = self.spin_height.value()
+            self.preview.set_image(current_pixmap)
+        self._set_process_logo(self.logo_process)
+
+    def clear_image_list(self):
+        self.image_files.clear()
+        self.list_images.clear()
+        self.preview.set_image(None)
         self._set_process_logo(self.logo_process)
 
     def choose_color(self):

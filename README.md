@@ -18,7 +18,7 @@ procesar los archivos.
 - Confirmación única antes de sobrescribir archivos existentes.
 - Barra de progreso y mensajes de error antes de iniciar operaciones inválidas.
 - Panel de estado con un icono que cambia al finalizar correctamente.
-- Botón para vaciar la lista y restaurar la configuración inicial.
+- Botones independientes para restablecer el diseño o vaciar la lista.
 - Icono de aplicación configurable mediante los archivos incluidos en
   `graphics/`.
 
@@ -57,9 +57,13 @@ aplicación pregunta una sola vez si se deben sobrescribir. Los archivos WMF,
 que no se exportan directamente en todas las instalaciones de Inkscape, se
 generan como SVG.
 
-El botón **Vaciar lista y restablecer** elimina las imágenes cargadas, limpia la
-carpeta de salida, restaura el tamaño y el color iniciales y devuelve el icono
-del botón de proceso a `logo_cajero_1.ico`.
+El botón **Restablecer diseño** recupera el tamaño y el color iniciales y
+restablece el rectángulo de la previsualización, pero conserva las imágenes
+cargadas, la carpeta de salida y la ruta de Inkscape.
+
+El botón **Vaciar lista** elimina únicamente las imágenes cargadas y limpia la
+previsualización. Ambos botones devuelven el logo de estado a
+`logo_cajero_1.ico`; no ejecutan la acción del otro botón.
 
 ## Iconos
 
@@ -126,8 +130,3 @@ aplicación.
 Si se modifican los iconos o el código, vuelve a ejecutar el comando de
 compilación. Las carpetas `build/` y `dist/` son artefactos generados por
 PyInstaller y pueden eliminarse antes de una compilación limpia.
-
-Comando de compilación:
-```text
-python -m PyInstaller --clean --noconfirm HideLogo.spec
-```
